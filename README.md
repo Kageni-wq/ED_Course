@@ -11,3 +11,5 @@ Lightweight, local-first helpers for jotting ED course updates and related note 
 ## Notes
 - Data stays in the browser profile you use to open the HTML (no sync across browsers/devices).
 - Variants do not share storage keys; use the same file consistently if you want to keep existing notes.
+
+![ED Notes screenshot](docs/img/interface.png)
