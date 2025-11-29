@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ED Notes Helper (HPI / PE / MDM / ED Course / Tasks)</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      background: #f4f4f6;
+      color: #222;
+    }
+
+    .app {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+
+    .sidebar {
+      width: 270px;
+      background: #1f2933;
+      color: #f9fafb;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid #374151;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .sidebar-controls {
+      padding: 8px 10px;
+      border-bottom: 1px solid #374151;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    button {
+      cursor: pointer;
+      border-radius: 4px;
+      border: none;
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #1d4ed8;
+    }
+
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .btn-secondary:hover {
+      background: #d1d5db;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: #fef2f2;
+    }
+
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+
+    .patient-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px 0;
+    }
+
+    .patient-item {
+      padding: 8px 12px;
+      margin: 4px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      line-height: 1.3;
+      background: transparent;
+      border: 1px solid transparent;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .patient-item.active {
+      background: #111827;
+      border-color: #4f46e5;
+    }
+
+    .patient-item:hover {
+      background: #111827;
+    }
+
+    .patient-label {
+      flex: 1;
+      margin-right: 4px;
+      word-break: break-word;
+    }
+
+    .patient-room {
+      font-size: 11px;
+      opacity: 0.75;
+    }
+
+    .patient-done-pill {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: #16a34a;
+      color: #f9fafb;
+      white-space: nowrap;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 10px 14px;
+      gap: 8px;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .header-title {
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .header-subtitle {
+      font-size: 13px;
+      color: #4b5563;
+      margin-top: 2px;
+    }
+
+    .patient-meta {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    .patient-meta span {
+      margin-right: 10px;
+    }
+
+    .main-card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .sections-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .section-card {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .label-small {
+      font-size: 12px;
+      font-weight: 500;
+      color: #4b5563;
+    }
+
+    textarea {
+      width: 100%;
+      resize: vertical;
+      min-height: 80px;
+      max-height: 220px;
+      padding: 6px;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      font-size: 13px;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.3);
+    }
+
+    textarea[disabled] {
+      background: #f3f4f6;
+      color: #9ca3af;
+    }
+
+    .controls-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .controls-row-left,
+    .controls-row-right {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .time-format-toggle {
+      font-size: 12px;
+      color: #4b5563;
+    }
+
+    .time-format-toggle input {
+      margin-right: 4px;
+    }
+
+    /* ED course + tasks layout */
+    .ed-tasks-row {
+      display: grid;
+      grid-template-columns: minmax(0, 2.2fr) minmax(220px, 1fr);
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .entries-container {
+      height: 170px;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+      padding: 6px 8px;
+      overflow-y: auto;
+      font-size: 13px;
+      background: #f9fafb;
+    }
+
+    .entry-item {
+      padding: 4px 0;
+      border-bottom: 1px solid #e5e7eb;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .entry-item:last-child {
+      border-bottom: none;
+    }
+
+    .entry-timestamp {
+      font-weight: 600;
+      color: #111827;
+      margin-right: 4px;
+    }
+
+    .empty-state {
+      font-size: 13px;
+      color: #9ca3af;
+      font-style: italic;
+    }
+
+    /* Tasks panel */
+    .tasks-card {
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+      padding: 6px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      height: 170px;
+    }
+
+    .tasks-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tasks-list {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 0;
+      font-size: 13px;
+    }
+
+    .task-item input[type="checkbox"] {
+      cursor: pointer;
+    }
+
+    .task-label {
+      flex: 1;
+      word-break: break-word;
+    }
+
+    .task-label.completed {
+      text-decoration: line-through;
+      color: #6b7280;
+    }
+
+    .task-delete {
+      cursor: pointer;
+      font-size: 11px;
+      color: #9ca3af;
+      border-radius: 4px;
+      padding: 2px 4px;
+    }
+
+    .task-delete:hover {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .task-input-row {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .task-input-row input[type="text"] {
+      flex: 1;
+      padding: 4px 6px;
+      border-radius: 4px;
+      border: 1px solid #d1d5db;
+      font-size: 13px;
+    }
+
+    .task-input-row input[disabled] {
+      background: #f3f4f6;
+      color: #9ca3af;
+    }
+
+    .status-bar {
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 2px;
+    }
+
+    .status-bar span {
+      margin-right: 12px;
+    }
+
+    @media (max-width: 1100px) {
+      .sections-grid {
+        grid-template-columns: 1fr;
+      }
+      .ed-tasks-row {
+        grid-template-columns: 1fr;
+      }
+      .tasks-card,
+      .entries-container {
+        height: 150px;
+      }
+    }
+
+    @media (max-width: 800px) {
+      .sidebar {
+        width: 210px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      ED Notes Helper
+    </div>
+    <div class="sidebar-controls">
+      <button class="btn-primary" id="addPatientBtn">+ Add Patient</button>
+      <button class="btn-secondary" id="saveAllBtn">Save All to .txt</button>
+    </div>
+    <div class="patient-list" id="patientList">
+      <!-- Patients injected here -->
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="header-row">
+      <div>
+        <div class="header-title" id="headerTitle">
+          No patient selected
+        </div>
+        <div class="header-subtitle">
+          Add a patient on the left, then edit HPI / PE / MDM, ED course, and tasks here.
+        </div>
+        <div class="patient-meta" id="patientMeta"></div>
+      </div>
+      <div class="controls-row-right">
+        <button class="btn-secondary" id="renamePatientBtn" disabled>Rename</button>
+        <button class="btn-danger" id="deletePatientBtn" disabled>Remove</button>
+      </div>
+    </div>
+
+    <div class="main-card">
+      <!-- HPI / PE / MDM -->
+      <div class="sections-grid">
+        <div class="section-card">
+          <div class="label-small">HPI</div>
+          <textarea id="hpiInput"
+                    placeholder="Brief HPI for this patient..."
+                    disabled></textarea>
+        </div>
+        <div class="section-card">
+          <div class="label-small">PE</div>
+          <textarea id="peInput"
+                    placeholder="Pertinent physical exam findings..."
+                    disabled></textarea>
+        </div>
+        <div class="section-card">
+          <div class="label-small">MDM</div>
+          <textarea id="mdmInput"
+                    placeholder="MDM / differential / risk discussion..."
+                    disabled></textarea>
+        </div>
+      </div>
+
+      <!-- ED Course controls -->
+      <div>
+        <div class="label-small">New ED course entry</div>
+        <textarea id="entryInput"
+                  placeholder="Example: Reassessed – improving pain, VS stable. CT a/p ordered."
+                  disabled></textarea>
+      </div>
+
+      <div class="controls-row">
+        <div class="controls-row-left">
+          <button class="btn-primary" id="addEntryBtn" disabled>Add Entry</button>
+          <span style="font-size:11px;color:#6b7280;">
+            Tip: Ctrl+Enter to add
+          </span>
+        </div>
+        <div class="controls-row-right">
+          <div class="time-format-toggle">
+            <label>
+              <input type="checkbox" id="timeFormatToggle" />
+              Use 24-hour time
+            </label>
+          </div>
+          <button class="btn-secondary" id="copyCourseBtn" disabled>Copy ED Course to Clipboard</button>
+        </div>
+      </div>
+
+      <!-- ED Course + Tasks -->
+      <div class="ed-tasks-row">
+        <div>
+          <div class="label-small">ED Course entries (newest at top)</div>
+          <div class="entries-container" id="entriesContainer">
+            <div class="empty-state">
+              No entries yet. Add your first ED course update above.
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="label-small">Tasks</div>
+          <div class="tasks-card">
+            <div class="tasks-header-row">
+              <span style="font-size:12px;color:#4b5563;">Checklist</span>
+            </div>
+            <div class="tasks-list" id="tasksList">
+              <div class="empty-state">
+                No tasks. Add one below.
+              </div>
+            </div>
+            <div class="task-input-row">
+              <input type="text" id="taskInput" placeholder="Add task..." disabled />
+              <button class="btn-secondary" id="addTaskBtn" disabled>+ Task</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="status-bar">
+        <span id="statusPatients">0 patients</span>
+        <span id="statusEntries">0 entries</span>
+        <span id="statusMessage"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = "edNotesHelper_v2";
+
+  let state = {
+    patients: [],
+    selectedPatientId: null,
+    use24Hour: true,
+  };
+
+  function defaultTasks() {
+    const now = Date.now();
+    return [
+      { id: "t_" + Math.random().toString(36).slice(2, 8), label: "Publish note", done: false, createdAt: now },
+      { id: "t_" + Math.random().toString(36).slice(2, 8), label: "Sign note", done: false, createdAt: now },
+    ];
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.patients)) {
+          state = Object.assign(
+            { patients: [], selectedPatientId: null, use24Hour: true },
+            parsed
+          );
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load state", e);
+    }
+
+    // ensure new fields exist
+    state.patients.forEach(p => {
+      if (typeof p.hpi !== "string") p.hpi = "";
+      if (typeof p.pe !== "string") p.pe = "";
+      if (typeof p.mdm !== "string") p.mdm = "";
+      if (!Array.isArray(p.entries)) p.entries = [];
+      if (!Array.isArray(p.tasks)) p.tasks = defaultTasks();
+    });
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+      console.error("Failed to save state", e);
+    }
+  }
+
+  function uuid() {
+    return "p_" + Math.random().toString(36).substring(2, 10);
+  }
+
+  function formatTimestamp(date, use24Hour) {
+    const d = date;
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    let hh = d.getHours();
+    const mins = String(d.getMinutes()).padStart(2, "0");
+
+    if (use24Hour) {
+      return `${mm}/${dd}/${yyyy} ${String(hh).padStart(2, "0")}:${mins}`;
+    } else {
+      const ampm = hh >= 12 ? "PM" : "AM";
+      hh = hh % 12;
+      if (hh === 0) hh = 12;
+      return `${mm}/${dd}/${yyyy} ${hh}:${mins} ${ampm}`;
+    }
+  }
+
+  function getSelectedPatient() {
+    return state.patients.find(p => p.id === state.selectedPatientId) || null;
+  }
+
+  function setStatusMessage(msg, timeoutMs = 2000) {
+    const el = document.getElementById("statusMessage");
+    el.textContent = msg || "";
+    if (timeoutMs && msg) {
+      setTimeout(() => {
+        if (el.textContent === msg) {
+          el.textContent = "";
+        }
+      }, timeoutMs);
+    }
+  }
+
+  // --- Rendering ----------------------------------------------------------
+
+  function renderPatients() {
+    const list = document.getElementById("patientList");
+    list.innerHTML = "";
+
+    if (state.patients.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "empty-state";
+      empty.style.padding = "10px";
+      empty.textContent = "No patients yet. Click \"+ Add Patient\" to start.";
+      list.appendChild(empty);
+      return;
+    }
+
+    state.patients.forEach(p => {
+      const item = document.createElement("div");
+      item.className =
+        "patient-item" + (p.id === state.selectedPatientId ? " active" : "");
+      item.dataset.id = p.id;
+
+      const label = document.createElement("div");
+      label.className = "patient-label";
+      label.textContent = p.label || "Untitled";
+
+      const rightSide = document.createElement("div");
+      rightSide.style.display = "flex";
+      rightSide.style.alignItems = "center";
+      rightSide.style.gap = "4px";
+
+      if (p.room) {
+        const room = document.createElement("div");
+        room.className = "patient-room";
+        room.textContent = p.room;
+        rightSide.appendChild(room);
+      }
+
+      const tasks = p.tasks || [];
+      const allDone =
+        tasks.length > 0 && tasks.every(t => t.done === true);
+
+      if (allDone) {
+        const donePill = document.createElement("div");
+        donePill.className = "patient-done-pill";
+        donePill.textContent = "Done";
+        rightSide.appendChild(donePill);
+      }
+
+      item.appendChild(label);
+      item.appendChild(rightSide);
+
+      item.addEventListener("click", () => {
+        state.selectedPatientId = p.id;
+        saveState();
+        renderAll();
+      });
+
+      list.appendChild(item);
+    });
+  }
+
+  function renderEntries() {
+    const container = document.getElementById("entriesContainer");
+    container.innerHTML = "";
+
+    const patient = getSelectedPatient();
+
+    if (!patient) {
+      const empty = document.createElement("div");
+      empty.className = "empty-state";
+      empty.textContent = "Select a patient to view their ED course entries.";
+      container.appendChild(empty);
+      return;
+    }
+
+    if (!patient.entries || patient.entries.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "empty-state";
+      empty.textContent = "No entries yet for this patient.";
+      container.appendChild(empty);
+      return;
+    }
+
+    const entries = [...patient.entries].sort((a, b) => b.timestamp - a.timestamp);
+
+    entries.forEach(entry => {
+      const item = document.createElement("div");
+      item.className = "entry-item";
+
+      const tsSpan = document.createElement("span");
+      tsSpan.className = "entry-timestamp";
+      tsSpan.textContent =
+        formatTimestamp(new Date(entry.timestamp), state.use24Hour) + " –";
+
+      const textSpan = document.createElement("span");
+      textSpan.textContent = " " + entry.text;
+
+      item.appendChild(tsSpan);
+      item.appendChild(textSpan);
+
+      container.appendChild(item);
+    });
+  }
+
+  function renderHeader() {
+    const headerTitle = document.getElementById("headerTitle");
+    const patientMeta = document.getElementById("patientMeta");
+
+    const patient = getSelectedPatient();
+
+    if (!patient) {
+      headerTitle.textContent = "No patient selected";
+      patientMeta.textContent = "";
+      return;
+    }
+
+    headerTitle.textContent = patient.label || "Untitled patient";
+
+    const parts = [];
+    if (patient.room) parts.push(`Room/Bed: ${patient.room}`);
+    if (patient.createdAt) {
+      parts.push(
+        "Created: " +
+          formatTimestamp(new Date(patient.createdAt), state.use24Hour)
+      );
+    }
+
+    patientMeta.textContent = parts.join(" • ");
+  }
+
+  let isRenderingSections = false;
+
+  function renderSections() {
+    isRenderingSections = true;
+
+    const patient = getSelectedPatient();
+    const hpiInput = document.getElementById("hpiInput");
+    const peInput = document.getElementById("peInput");
+    const mdmInput = document.getElementById("mdmInput");
+    const entryInput = document.getElementById("entryInput");
+
+    if (!patient) {
+      hpiInput.value = "";
+      peInput.value = "";
+      mdmInput.value = "";
+      entryInput.value = "";
+      hpiInput.disabled = true;
+      peInput.disabled = true;
+      mdmInput.disabled = true;
+      entryInput.disabled = true;
+    } else {
+      hpiInput.disabled = false;
+      peInput.disabled = false;
+      mdmInput.disabled = false;
+      entryInput.disabled = false;
+      hpiInput.value = patient.hpi || "";
+      peInput.value = patient.pe || "";
+      mdmInput.value = patient.mdm || "";
+    }
+
+    isRenderingSections = false;
+  }
+
+  function renderTasks() {
+    const list = document.getElementById("tasksList");
+    const input = document.getElementById("taskInput");
+    const addBtn = document.getElementById("addTaskBtn");
+
+    list.innerHTML = "";
+
+    const patient = getSelectedPatient();
+
+    if (!patient) {
+      input.value = "";
+      input.disabled = true;
+      addBtn.disabled = true;
+
+      const empty = document.createElement("div");
+      empty.className = "empty-state";
+      empty.textContent = "Select a patient to manage tasks.";
+      list.appendChild(empty);
+      return;
+    }
+
+    input.disabled = false;
+    addBtn.disabled = false;
+
+    if (!patient.tasks || patient.tasks.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "empty-state";
+      empty.textContent = "No tasks. Add one below.";
+      list.appendChild(empty);
+      return;
+    }
+
+    patient.tasks.forEach(task => {
+      const row = document.createElement("div");
+      row.className = "task-item";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = !!task.done;
+      checkbox.addEventListener("change", () => {
+        task.done = checkbox.checked;
+        saveState();
+        renderTasks();
+        renderPatients(); // refresh sidebar done pill
+      });
+
+      const label = document.createElement("div");
+      label.className = "task-label" + (task.done ? " completed" : "");
+      label.textContent = task.label;
+
+      const del = document.createElement("span");
+      del.className = "task-delete";
+      del.title = "Remove task";
+      del.textContent = "✕";
+      del.addEventListener("click", () => {
+        patient.tasks = patient.tasks.filter(t => t.id !== task.id);
+        saveState();
+        renderTasks();
+        renderPatients(); // refresh sidebar done pill
+      });
+
+      row.appendChild(checkbox);
+      row.appendChild(label);
+      row.appendChild(del);
+
+      list.appendChild(row);
+    });
+  }
+
+  function renderStatusBar() {
+    const statusPatients = document.getElementById("statusPatients");
+    const statusEntries = document.getElementById("statusEntries");
+
+    const totalPatients = state.patients.length;
+    const totalEntries = state.patients.reduce(
+      (sum, p) => sum + (p.entries ? p.entries.length : 0),
+      0
+    );
+
+    statusPatients.textContent =
+      totalPatients + (totalPatients === 1 ? " patient" : " patients");
+    statusEntries.textContent =
+      totalEntries + (totalEntries === 1 ? " entry" : " entries");
+  }
+
+  function renderControls() {
+    const patientSelected = !!getSelectedPatient();
+
+    document.getElementById("addEntryBtn").disabled = !patientSelected;
+    document.getElementById("copyCourseBtn").disabled = !patientSelected;
+    document.getElementById("renamePatientBtn").disabled = !patientSelected;
+    document.getElementById("deletePatientBtn").disabled = !patientSelected;
+
+    document.getElementById("timeFormatToggle").checked = state.use24Hour;
+  }
+
+  function renderAll() {
+    renderPatients();
+    renderHeader();
+    renderSections();
+    renderEntries();
+    renderTasks();
+    renderStatusBar();
+    renderControls();
+  }
+
+  // --- Event handlers -----------------------------------------------------
+
+  function onAddPatient() {
+    const label = prompt(
+      "Patient label (e.g. 'B12 – 81M SBO' or 'B6 – 45F CP'):"
+    );
+    if (!label) return;
+
+    const room = prompt("Room/Bed (optional):", "");
+
+    const id = uuid();
+    const now = Date.now();
+    const newPatient = {
+      id,
+      label: label.trim(),
+      room: room ? room.trim() : "",
+      createdAt: now,
+      hpi: "",
+      pe: "",
+      mdm: "",
+      entries: [],
+      tasks: defaultTasks(),
+    };
+
+    state.patients.push(newPatient);
+    state.selectedPatientId = id;
+    saveState();
+    renderAll();
+  }
+
+  function onRenamePatient() {
+    const patient = getSelectedPatient();
+    if (!patient) return;
+
+    const newLabel = prompt("Edit patient label:", patient.label || "");
+    if (newLabel === null) return;
+
+    const newRoom = prompt(
+      "Edit room/bed (optional):",
+      patient.room ? patient.room : ""
+    );
+    patient.label = newLabel.trim() || patient.label;
+    patient.room = newRoom ? newRoom.trim() : "";
+
+    saveState();
+    renderAll();
+  }
+
+  function onDeletePatient() {
+    const patient = getSelectedPatient();
+    if (!patient) return;
+
+    const confirmDelete = confirm(
+      `Remove patient "${patient.label}" and all their notes?`
+    );
+    if (!confirmDelete) return;
+
+    state.patients = state.patients.filter(p => p.id !== patient.id);
+    if (state.selectedPatientId === patient.id) {
+      state.selectedPatientId = state.patients[0]?.id || null;
+    }
+
+    saveState();
+    renderAll();
+  }
+
+  function onAddEntry() {
+    const patient = getSelectedPatient();
+    if (!patient) return;
+
+    const input = document.getElementById("entryInput");
+    const text = input.value.trim();
+    if (!text) {
+      setStatusMessage("Cannot add an empty entry.");
+      return;
+    }
+
+    const now = Date.now();
+    const entry = { timestamp: now, text };
+
+    if (!patient.entries) patient.entries = [];
+    patient.entries.push(entry);
+
+    input.value = "";
+    saveState();
+    renderAll();
+    setStatusMessage("ED course entry added.");
+    input.focus();
+  }
+
+  async function onCopyCourse() {
+    const patient = getSelectedPatient();
+    if (!patient) return;
+
+    const use24 = state.use24Hour;
+    const entries = (patient.entries || []).sort(
+      (a, b) => a.timestamp - b.timestamp
+    ); // oldest first
+
+    if (entries.length === 0) {
+      setStatusMessage("No entries to copy for this patient.");
+      return;
+    }
+
+    const lines = entries.map(entry => {
+      const ts = formatTimestamp(new Date(entry.timestamp), use24);
+      return `${ts} - ${entry.text}`;
+    });
+
+    const header = patient.label ? patient.label + "\n" : "";
+    const textToCopy = header + lines.join("\n");
+
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      setStatusMessage("ED course copied to clipboard.");
+    } catch (e) {
+      console.error("Clipboard failed", e);
+      setStatusMessage("Clipboard failed; copy may need to be manual.");
+    }
+  }
+
+  function onTimeFormatToggle(e) {
+    state.use24Hour = e.target.checked;
+    saveState();
+    renderAll();
+  }
+
+  function onEntryKeyDown(e) {
+    if (e.key === "Enter" && e.ctrlKey) {
+      e.preventDefault();
+      onAddEntry();
+    }
+  }
+
+  function onSectionInput(sectionKey, value) {
+    if (isRenderingSections) return;
+    const patient = getSelectedPatient();
+    if (!patient) return;
+    patient[sectionKey] = value;
+    saveState();
+  }
+
+  function onAddTask() {
+    const patient = getSelectedPatient();
+    if (!patient) return;
+
+    const input = document.getElementById("taskInput");
+    const label = input.value.trim();
+    if (!label) {
+      setStatusMessage("Task cannot be empty.");
+      return;
+    }
+
+    const now = Date.now();
+    const task = {
+      id: "t_" + Math.random().toString(36).slice(2, 8),
+      label,
+      done: false,
+      createdAt: now,
+    };
+
+    if (!patient.tasks) patient.tasks = [];
+    patient.tasks.push(task);
+    input.value = "";
+    saveState();
+    renderTasks();
+    renderPatients(); // update sidebar done pill if relevant
+  }
+
+  function onSaveAll() {
+    if (!state.patients.length) {
+      setStatusMessage("No patients to export.");
+      return;
+    }
+
+    const use24 = state.use24Hour;
+    const lines = [];
+
+    state.patients.forEach((p, idx) => {
+      if (idx > 0) lines.push(""); // blank line between patients
+      lines.push(`===== Patient ${idx + 1} =====`);
+      lines.push(`Label: ${p.label || "Untitled"}`);
+      if (p.room) lines.push(`Room/Bed: ${p.room}`);
+      if (p.createdAt) {
+        lines.push(
+          `Created: ${formatTimestamp(new Date(p.createdAt), use24)}`
+        );
+      }
+
+      lines.push("");
+      lines.push("HPI:");
+      lines.push(p.hpi ? p.hpi : "[none]");
+      lines.push("");
+      lines.push("PE:");
+      lines.push(p.pe ? p.pe : "[none]");
+      lines.push("");
+      lines.push("MDM:");
+      lines.push(p.mdm ? p.mdm : "[none]");
+      lines.push("");
+      lines.push("TASKS:");
+      const tasks = p.tasks || [];
+      if (!tasks.length) {
+        lines.push("[no tasks]");
+      } else {
+        tasks.forEach(t => {
+          const box = t.done ? "[x]" : "[ ]";
+          lines.push(`${box} ${t.label}`);
+        });
+      }
+      lines.push("");
+      lines.push("ED COURSE:");
+      const entries = (p.entries || []).sort(
+        (a, b) => a.timestamp - b.timestamp
+      );
+      if (!entries.length) {
+        lines.push("[no course entries]");
+      } else {
+        entries.forEach(entry => {
+          const ts = formatTimestamp(new Date(entry.timestamp), use24);
+          lines.push(`${ts} - ${entry.text}`);
+        });
+      }
+    });
+
+    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    const filename = `ed_notes_${yyyy}-${mm}-${dd}.txt`;
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    setStatusMessage("Exported all patients to .txt");
+  }
+
+  // --- Init ---------------------------------------------------------------
+
+  function init() {
+    loadState();
+
+    document
+      .getElementById("addPatientBtn")
+      .addEventListener("click", onAddPatient);
+    document
+      .getElementById("renamePatientBtn")
+      .addEventListener("click", onRenamePatient);
+    document
+      .getElementById("deletePatientBtn")
+      .addEventListener("click", onDeletePatient);
+    document
+      .getElementById("addEntryBtn")
+      .addEventListener("click", onAddEntry);
+    document
+      .getElementById("copyCourseBtn")
+      .addEventListener("click", onCopyCourse);
+    document
+      .getElementById("timeFormatToggle")
+      .addEventListener("change", onTimeFormatToggle);
+    document
+      .getElementById("entryInput")
+      .addEventListener("keydown", onEntryKeyDown);
+    document
+      .getElementById("saveAllBtn")
+      .addEventListener("click", onSaveAll);
+    document
+      .getElementById("addTaskBtn")
+      .addEventListener("click", onAddTask);
+    document
+      .getElementById("taskInput")
+      .addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          onAddTask();
+        }
+      });
+
+    document
+      .getElementById("hpiInput")
+      .addEventListener("input", e => onSectionInput("hpi", e.target.value));
+    document
+      .getElementById("peInput")
+      .addEventListener("input", e => onSectionInput("pe", e.target.value));
+    document
+      .getElementById("mdmInput")
+      .addEventListener("input", e => onSectionInput("mdm", e.target.value));
+
+    if (typeof state.use24Hour !== "boolean") {
+      state.use24Hour = true;
+    }
+
+    renderAll();
+  }
+
+  window.addEventListener("load", init);
+</script>
+</body>
+</html>
